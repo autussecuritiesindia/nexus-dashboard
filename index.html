@@ -3,61 +3,699 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="color-scheme" content="dark">
   <title>Nexus Dashboard</title>
   <style>
-    :root { color-scheme: dark; }
-    body {
-      margin: 0;
-      font-family: system-ui, -apple-system, Segoe UI, Roboto, Arial, sans-serif;
-      background: #0b1220;
-      color: #e5e7eb;
-      min-height: 100vh;
-      display: grid;
-      place-items: center;
+    :root{
+      --bg:#0b1220; --panel:#111827; --panel2:#0f172a; --line:#223047;
+      --text:#e5e7eb; --muted:#94a3b8; --green:#34d399; --red:#f87171;
+      --blue:#60a5fa; --violet:#8b5cf6; --yellow:#fbbf24;
+      --shadow:0 20px 50px rgba(0,0,0,.35);
+      --radius:18px;
     }
-    .card {
-      width: min(760px, calc(100vw - 32px));
-      background: #111827;
-      border: 1px solid #223047;
-      border-radius: 18px;
-      padding: 28px;
-      box-shadow: 0 20px 50px rgba(0,0,0,.35);
+    *{box-sizing:border-box}
+    html,body{height:100%}
+    body{
+      margin:0; font-family:system-ui,-apple-system,Segoe UI,Roboto,Arial,sans-serif;
+      background:var(--bg); color:var(--text);
     }
-    h1 { margin: 0 0 10px; font-size: 2rem; }
-    p { margin: 0 0 14px; color: #9ca3af; line-height: 1.6; }
-    .row { display: flex; gap: 12px; flex-wrap: wrap; margin-top: 18px; }
-    .btn {
-      display: inline-block;
-      padding: 12px 16px;
-      border-radius: 12px;
-      text-decoration: none;
-      color: white;
-      background: linear-gradient(135deg, #60a5fa, #8b5cf6);
-      border: 0;
-      font-weight: 600;
+    a{color:inherit}
+    .shell{display:grid; grid-template-columns:220px 1fr; min-height:100vh}
+    aside{
+      background:#0f172a; border-right:1px solid var(--line);
+      padding:18px 14px; display:flex; flex-direction:column; gap:18px;
     }
-    code {
-      display: block;
-      background: #0f172a;
-      border: 1px solid #223047;
-      padding: 12px;
-      border-radius: 12px;
-      overflow-x: auto;
-      color: #93c5fd;
-      margin-top: 14px;
+    .brand{display:flex;align-items:center;gap:10px;font-weight:700}
+    .dot{width:10px;height:10px;border-radius:50%;background:#60a5fa;box-shadow:0 0 0 6px rgba(96,165,250,.15)}
+    nav button{
+      width:100%; text-align:left; border:1px solid transparent; background:transparent;
+      color:var(--muted); padding:11px 12px; border-radius:10px; cursor:pointer; font:inherit;
+      margin:4px 0;
     }
-    .small { font-size: .92rem; }
+    nav button.active, nav button:hover{background:#111b2e; color:var(--text); border-color:var(--line)}
+    .foot{margin-top:auto; font-size:12px; color:var(--muted); border-top:1px solid var(--line); padding-top:16px}
+    main{padding:22px 26px; max-width:1600px; width:100%}
+    .top{display:flex; justify-content:space-between; align-items:flex-start; gap:18px; margin-bottom:18px}
+    h1{margin:0; font-size:2rem}
+    .sub{color:var(--muted); margin-top:6px}
+    .pill{display:inline-flex; align-items:center; gap:8px; font-size:13px; color:var(--muted)}
+    .status-dot{width:8px;height:8px;border-radius:50%;background:var(--green);display:inline-block}
+    .btn{
+      border:1px solid var(--line); background:#162238; color:var(--text);
+      padding:10px 14px; border-radius:12px; cursor:pointer; font:inherit
+    }
+    .btn.primary{background:linear-gradient(135deg,var(--blue),var(--violet)); border-color:transparent; font-weight:700}
+    .btn.danger{background:transparent; border-color:rgba(248,113,113,.6); color:#fca5a5}
+    .btn.sm{padding:7px 10px; border-radius:10px; font-size:13px}
+    .grid-kpi{display:grid; grid-template-columns:repeat(4,minmax(0,1fr)); gap:12px; margin:18px 0}
+    .card{
+      background:linear-gradient(180deg,#111827,#0f172a); border:1px solid var(--line);
+      border-radius:var(--radius); box-shadow:var(--shadow);
+    }
+    .kpi{padding:16px 16px 18px}
+    .kpi .lbl{color:var(--muted); font-size:12px; letter-spacing:.06em; text-transform:uppercase}
+    .kpi .val{font-size:2rem; font-weight:800; margin-top:6px}
+    .kpi .small{margin-top:4px; font-size:13px; color:var(--muted)}
+    .pos{color:var(--green)} .neg{color:var(--red)} .warn{color:var(--yellow)}
+    .layout{display:grid; grid-template-columns:1.55fr .95fr; gap:14px; align-items:start}
+    .section-head{display:flex; justify-content:space-between; align-items:center; gap:10px; padding:16px 16px 0}
+    .section-head h2,.section-head h3{margin:0}
+    .panel{padding:0 0 8px}
+    .toolbar{display:flex; flex-wrap:wrap; gap:10px; padding:14px 16px}
+    select,input{
+      background:#111827; color:var(--text); border:1px solid var(--line); border-radius:10px;
+      padding:10px 12px; font:inherit
+    }
+    .tbl{width:100%; border-collapse:collapse; margin-top:4px}
+    .tbl th,.tbl td{padding:12px 16px; border-bottom:1px solid #1f2a3b; text-align:left; font-size:14px; white-space:nowrap}
+    .tbl th{color:#9fb0c7; font-size:12px; text-transform:uppercase; letter-spacing:.05em}
+    .num{text-align:right}
+    .chip{display:inline-flex; align-items:center; padding:6px 10px; border-radius:999px; font-size:12px; background:#11263a; color:#a7f3d0}
+    .wrap{padding:16px}
+    .hidden{display:none !important}
+    .muted{color:var(--muted)}
+    .row{display:flex; gap:10px; align-items:center}
+    .banner{margin:0 0 14px; padding:10px 14px; border:1px solid var(--line); background:#111827; border-radius:12px}
+    .modal-back{
+      position:fixed; inset:0; background:rgba(5,10,20,.72); display:flex; align-items:center; justify-content:center; z-index:1000;
+      padding:16px;
+    }
+    .modal{width:min(720px,100%); background:var(--panel); border:1px solid var(--line); border-radius:20px; box-shadow:var(--shadow); padding:20px}
+    .modal h3{margin:0 0 10px}
+    .form-grid{display:grid; grid-template-columns:1fr 1fr; gap:12px}
+    .field{display:flex; flex-direction:column; gap:6px}
+    .field label{font-size:13px; color:#a7b6cb}
+    .err{color:#fca5a5; margin-top:10px; min-height:18px}
+    .view{display:block}
+    .loading{padding:18px 16px; color:var(--muted)}
+    @media (max-width: 1100px){
+      .shell{grid-template-columns:1fr}
+      aside{border-right:none; border-bottom:1px solid var(--line)}
+      .grid-kpi,.layout,.form-grid{grid-template-columns:1fr}
+    }
   </style>
 </head>
 <body>
-  <main class="card">
-    <h1>Nexus Dashboard</h1>
-    <p>This GitHub Pages site is live. Next step is connecting it to your PocketBase backend through Cloudflare Tunnel.</p>
-    <p class="small">When you are ready, we will replace this landing page with the full dashboard HTML and set the PocketBase URL.</p>
-    <code>window.PB_URL = "https://your-pocketbase-tunnel.example.com";</code>
-    <div class="row">
-      <a class="btn" href="dashboard.html">Open dashboard</a>
+<div class="shell">
+  <aside>
+    <div class="brand"><span class="dot"></span> Nexus</div>
+    <nav>
+      <button data-view="dashboard" class="active">Dashboard</button>
+      <button data-view="clients">Clients</button>
+      <button data-view="history">History Book</button>
+      <button data-view="reports">Reports</button>
+      <button data-view="settings">Settings</button>
+    </nav>
+    <div class="foot">
+      Live · PocketBase<br>
+      <span id="who"></span>
     </div>
+  </aside>
+
+  <main>
+    <div class="top">
+      <div>
+        <h1 id="page-title">Dashboard</h1>
+        <div class="sub" id="page-sub">Live risk overview</div>
+      </div>
+      <div class="row">
+        <div class="pill"><span class="status-dot"></span><span id="status">connecting...</span></div>
+        <button class="btn" id="btn-logout">Logout</button>
+      </div>
+    </div>
+
+    <div id="banner" class="banner hidden"></div>
+
+    <section id="dashboard" class="view">
+      <div class="grid-kpi">
+        <div class="card kpi"><div class="lbl">Portfolio VaR</div><div class="val" id="kpi-var">0%</div><div class="small" id="kpi-var-sub">within limit</div></div>
+        <div class="card kpi"><div class="lbl">Open Positions</div><div class="val" id="kpi-open">0</div><div class="small" id="kpi-open-sub">tracked</div></div>
+        <div class="card kpi"><div class="lbl">Today's P&L</div><div class="val" id="kpi-pnl">₹0</div><div class="small" id="kpi-pnl-sub">unrealised</div></div>
+        <div class="card kpi"><div class="lbl">Stale Positions</div><div class="val" id="kpi-stale">0</div><div class="small" id="kpi-stale-sub">none</div></div>
+      </div>
+
+      <div class="layout">
+        <div class="card panel">
+          <div class="section-head">
+            <h2>Open Positions</h2>
+            <div class="row">
+              <button class="btn sm" id="btn-refresh-cmp">Refresh CMP</button>
+              <button class="btn primary sm" id="btn-new-position">+ New Position</button>
+            </div>
+          </div>
+          <div id="dashboard-empty" class="loading hidden">No open positions.</div>
+          <table class="tbl" id="positions-table">
+            <thead>
+              <tr>
+                <th>Client</th><th>Symbol</th><th>Qty</th><th>Entry</th><th>CMP</th><th>SL</th><th>SL Impact</th><th>Unreal. P&L</th><th>Status</th><th></th>
+              </tr>
+            </thead>
+            <tbody></tbody>
+          </table>
+        </div>
+
+        <div class="card panel">
+          <div class="section-head"><h2>Risk Context</h2></div>
+          <div class="wrap">
+            <div class="muted" style="font-size:13px">Portfolio VaR vs limit</div>
+            <div style="height:10px;background:#182235;border-radius:999px;overflow:hidden;margin:10px 0 8px">
+              <div id="var-bar" style="height:100%;width:0%;background:linear-gradient(90deg,#34d399,#fbbf24,#fb7185)"></div>
+            </div>
+            <div class="row" style="justify-content:space-between"><div>now <b id="var-now">0%</b></div><div>limit <b id="var-limit">0%</b></div></div>
+            <div style="margin-top:18px">
+              <div class="muted" style="font-size:13px">Concentration (top client)</div>
+              <div style="margin-top:6px;font-size:1.1rem;font-weight:700" id="top-client">—</div>
+            </div>
+            <div style="margin-top:18px">
+              <div class="muted" style="font-size:13px">CMP source</div>
+              <div class="row" style="margin-top:8px;flex-wrap:wrap">
+                <span class="chip">hybrid</span>
+                <span class="chip">finnhub</span>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <section id="clients" class="view hidden">
+      <div class="section-head"><h2>Clients</h2><button class="btn primary" id="btn-new-client">+ New Client</button></div>
+      <div class="card panel" style="margin-top:14px">
+        <table class="tbl"><thead><tr><th>Name</th><th>Phone</th><th>Capital</th><th>Risk Band</th><th>Notes</th></tr></thead><tbody id="clients-table"></tbody></table>
+      </div>
+    </section>
+
+    <section id="history" class="view hidden">
+      <div class="section-head"><h2>History Book</h2><div class="muted">Closed trades</div></div>
+      <div class="card panel" style="margin-top:14px">
+        <div class="toolbar">
+          <select id="f-client"><option value="">All clients</option></select>
+          <input id="f-from" type="date">
+          <input id="f-to" type="date">
+          <select id="f-reason"><option value="">All reasons</option><option>Target Hit</option><option>SL Hit</option><option>Trail SL</option><option>Manual</option></select>
+          <button class="btn" id="btn-reset">Reset</button>
+          <div style="margin-left:auto" class="row">
+            <button class="btn" id="btn-export-all">Export CSV (all)</button>
+            <button class="btn primary" id="btn-export-filtered">Export CSV (filtered)</button>
+          </div>
+        </div>
+        <table class="tbl">
+          <thead>
+            <tr><th>Closed</th><th>Client</th><th>Symbol</th><th>Qty</th><th>Entry</th><th>Exit</th><th>P&L</th><th>Return %</th><th>R</th><th>Reason</th></tr>
+          </thead>
+          <tbody id="hist-table"></tbody>
+        </table>
+        <div id="hist-empty" class="loading hidden">No closed trades yet.</div>
+      </div>
+    </section>
+
+    <section id="reports" class="view hidden">
+      <h2>Reports</h2>
+      <div class="sub">Performance analytics on closed trades</div>
+      <div class="grid-kpi">
+        <div class="card kpi"><div class="lbl">Total Closed</div><div class="val" id="rep-total">0</div><div class="small" id="rep-total-sub">trades</div></div>
+        <div class="card kpi"><div class="lbl">Win Rate</div><div class="val" id="rep-winrate">—</div><div class="small" id="rep-winrate-sub">wins / total</div></div>
+        <div class="card kpi"><div class="lbl">Total P&L</div><div class="val" id="rep-pnl">₹0</div><div class="small">realised</div></div>
+        <div class="card kpi"><div class="lbl">Avg R</div><div class="val" id="rep-avgR">—</div><div class="small">risk multiple</div></div>
+      </div>
+      <div class="layout">
+        <div class="card panel">
+          <div class="section-head"><h3>Best Trades</h3></div>
+          <table class="tbl"><thead><tr><th>Symbol</th><th>Client</th><th>P&L</th><th>R</th><th>Reason</th></tr></thead><tbody id="rep-best"></tbody></table>
+        </div>
+        <div class="card panel">
+          <div class="section-head"><h3>Worst Trades</h3></div>
+          <table class="tbl"><thead><tr><th>Symbol</th><th>Client</th><th>P&L</th><th>R</th><th>Reason</th></tr></thead><tbody id="rep-worst"></tbody></table>
+        </div>
+      </div>
+      <div class="card panel" style="margin-top:14px">
+        <div class="section-head"><h3>P&L by Client</h3></div>
+        <table class="tbl"><thead><tr><th>Client</th><th>Trades</th><th>Wins</th><th>Win %</th><th>Total P&L</th><th>Avg R</th></tr></thead><tbody id="rep-by-client"></tbody></table>
+      </div>
+      <div class="card panel" style="margin-top:14px">
+        <div class="section-head"><h3>Exit Reason Breakdown</h3></div>
+        <table class="tbl"><thead><tr><th>Reason</th><th>Count</th><th>Total P&L</th><th>Avg R</th></tr></thead><tbody id="rep-by-reason"></tbody></table>
+      </div>
+    </section>
+
+    <section id="settings" class="view hidden">
+      <div class="section-head"><h2>Settings</h2></div>
+      <div class="card panel" style="margin-top:14px">
+        <div class="wrap">
+          <div class="field">
+            <label>PocketBase URL</label>
+            <input id="pb-url" placeholder="https://pb.yourdomain.com">
+          </div>
+          <div class="row" style="margin-top:12px">
+            <button class="btn primary" id="btn-save-pb-url">Save PB URL</button>
+            <button class="btn" id="btn-clear-pb-url">Clear</button>
+          </div>
+          <div class="muted" style="margin-top:10px">Use this to point GitHub Pages to your Cloudflare Tunnel backend.</div>
+        </div>
+      </div>
+    </section>
   </main>
+</div>
+
+<div class="modal-back hidden" id="m-client"><form class="modal" id="form-client">
+  <h3>New Client</h3>
+  <div class="form-grid">
+    <div class="field"><label>Name *</label><input name="name" required></div>
+    <div class="field"><label>Phone</label><input name="phone"></div>
+    <div class="field"><label>Capital (₹)</label><input name="capital" type="number" step="1"></div>
+    <div class="field"><label>Risk Band</label><select name="risk_band"><option>low</option><option>moderate</option><option>high</option></select></div>
+    <div class="field" style="grid-column:1/-1"><label>Notes</label><input name="notes"></div>
+  </div>
+  <div id="err-client" class="err"></div>
+  <div class="row" style="justify-content:flex-end;margin-top:12px">
+    <button type="button" class="btn" data-close>Cancel</button>
+    <button class="btn primary" type="submit">Create</button>
+  </div>
+</form></div>
+
+<div class="modal-back hidden" id="m-position"><form class="modal" id="form-position">
+  <h3>New Position</h3>
+  <div class="form-grid">
+    <div class="field"><label>Client *</label><select name="client" required id="pos-client"></select></div>
+    <div class="field"><label>Symbol *</label><input name="symbol" required placeholder="RELIANCE"></div>
+    <div class="field"><label>Qty *</label><input name="qty" type="number" step="1" required></div>
+    <div class="field"><label>Entry *</label><input name="entry" type="number" step="0.05" required></div>
+    <div class="field"><label>CMP</label><input name="cmp" type="number" step="0.05"></div>
+    <div class="field"><label>SL</label><input name="sl" type="number" step="0.05"></div>
+    <div class="field"><label>Target</label><input name="target" type="number" step="0.05"></div>
+    <div class="field"><label>Opened</label><input name="opened" type="date"></div>
+  </div>
+  <div id="err-position" class="err"></div>
+  <div class="row" style="justify-content:flex-end;margin-top:12px">
+    <button type="button" class="btn" data-close>Cancel</button>
+    <button class="btn primary" type="submit">Create</button>
+  </div>
+</form></div>
+
+<div class="modal-back hidden" id="m-close"><form class="modal" id="form-close">
+  <h3>Close Position</h3>
+  <div id="close-summary" class="sub"></div>
+  <div class="form-grid">
+    <div class="field"><label>Exit Price *</label><input name="exit" type="number" step="0.05" required></div>
+    <div class="field"><label>Reason *</label>
+      <select name="reason" required><option>Target Hit</option><option>SL Hit</option><option>Trail SL</option><option>Manual</option></select>
+    </div>
+    <div class="field"><label>Closed</label><input name="closed" type="date"></div>
+    <div class="field"><label>Notes</label><input name="notes"></div>
+  </div>
+  <div id="err-close" class="err"></div>
+  <div class="row" style="justify-content:flex-end;margin-top:12px">
+    <button type="button" class="btn" data-close>Cancel</button>
+    <button class="btn primary" type="submit">Close Position</button>
+  </div>
+</form></div>
+
+<div class="modal-back hidden" id="m-edit"><form class="modal" id="form-edit">
+  <h3>Edit Position</h3>
+  <div id="edit-summary" class="sub"></div>
+  <div class="form-grid">
+    <div class="field"><label>SL</label><input name="sl" type="number" step="0.05"></div>
+    <div class="field"><label>Target</label><input name="target" type="number" step="0.05"></div>
+    <div class="field"><label>CMP</label><input name="cmp" type="number" step="0.05"></div>
+    <div class="field"><label>Status</label><select name="status"><option value="open">open</option><option value="stale">stale</option></select></div>
+  </div>
+  <div id="err-edit" class="err"></div>
+  <div class="row" style="justify-content:flex-end;margin-top:12px">
+    <button type="button" class="btn" data-close>Cancel</button>
+    <button class="btn primary" type="submit">Save</button>
+  </div>
+</form></div>
+
+<script src="https://unpkg.com/pocketbase@0.26.5/dist/pocketbase.umd.js"></script>
+<script>
+const $ = s => document.querySelector(s);
+const $$ = s => [...document.querySelectorAll(s)];
+const fmt = n => new Intl.NumberFormat('en-IN',{style:'currency',currency:'INR',maximumFractionDigits:0}).format(n||0);
+const pct = n => (n>=0?'+':'') + (n||0).toFixed(2) + '%';
+const today = () => new Date().toISOString().slice(0,10);
+const PB_URL = localStorage.getItem('PB_URL') || window.PB_URL || 'http://127.0.0.1:8090';
+let pb = new PocketBase(PB_URL);
+
+const STATE = { clients: [], positions: [], trades: [], settings: {}, editingPos: null, closingPos: null };
+const DEFAULTS = { portfolio_value: 500000, var_limit: 5, cmp_source: 'hybrid' };
+
+function openModal(id){ $('#'+id).classList.remove('hidden'); }
+function closeModal(id){ $('#'+id).classList.add('hidden'); }
+function cname(id){ const c=STATE.clients.find(x=>x.id===id); return c ? c.name : id || '—'; }
+function setStatus(t,ok=true){ $('#status').textContent = t; $('#status').style.color = ok ? '#9ca3af' : '#fca5a5'; }
+
+function syncSettingsUI(){ $('#pb-url').value = localStorage.getItem('PB_URL') || ''; }
+
+function navTo(view){
+  $$('#dashboard,#clients,#history,#reports,#settings').forEach(s=>s.classList.toggle('hidden', s.id!==view));
+  $$('#aside nav button').forEach(b=>b.classList.toggle('active', b.dataset.view===view));
+}
+
+function renderPositions(){
+  const tb = $('#positions-table tbody'); tb.innerHTML = '';
+  const open = STATE.positions.filter(p => (p.status||'open') !== 'closed');
+  $('#dashboard-empty').classList.toggle('hidden', open.length > 0);
+  open.forEach(p => {
+    const qty = +p.qty || 0, entry = +p.entry || 0, cmp = +p.cmp || 0, sl = +p.sl || 0;
+    const unreal = qty * (cmp - entry);
+    const slImpact = qty * (sl - entry);
+    const tr = document.createElement('tr');
+    tr.innerHTML = `
+      <td>${cname(p.client)}</td>
+      <td><b>${p.symbol||'—'}</b></td>
+      <td>${qty}</td>
+      <td>${fmt(entry)}</td>
+      <td class="${cmp>=entry?'pos':'neg'}">${fmt(cmp)}</td>
+      <td>${fmt(sl)}</td>
+      <td class="${slImpact>=0?'pos':'neg'}">${fmt(slImpact)}</td>
+      <td class="${unreal>=0?'pos':'neg'}">${fmt(unreal)}</td>
+      <td><span class="chip">${p.status||'open'}</span></td>
+      <td><div class="row"><button class="btn sm" data-edit-pos="${p.id}">Edit</button> <button class="btn sm danger" data-close-pos="${p.id}">Close</button></div></td>`;
+    tb.appendChild(tr);
+  });
+  tb.querySelectorAll('[data-close-pos]').forEach(b => b.onclick = () => openClose(b.dataset.closePos));
+  tb.querySelectorAll('[data-edit-pos]').forEach(b => b.onclick = () => openEdit(b.dataset.editPos));
+}
+
+function renderClients(){
+  const tb = $('#clients-table'); tb.innerHTML = '';
+  STATE.clients.forEach(c => {
+    const tr = document.createElement('tr');
+    tr.innerHTML = `<td><b>${c.name||'—'}</b></td><td>${c.phone||'—'}</td><td>${fmt(+c.capital||0)}</td><td>${c.risk_band||'—'}</td><td>${c.notes||'—'}</td>`;
+    tb.appendChild(tr);
+  });
+  const sel = $('#f-client');
+  const cur = sel.value;
+  sel.innerHTML = '<option value="">All clients</option>' + STATE.clients.map(c=>`<option value="${c.id}">${c.name}</option>`).join('');
+  sel.value = cur;
+  const ps = $('#pos-client');
+  ps.innerHTML = '<option value="">Select client</option>' + STATE.clients.map(c=>`<option value="${c.id}">${c.name}</option>`).join('');
+}
+
+function filteredHist(){
+  const c=$('#f-client').value, fr=$('#f-from').value, to=$('#f-to').value, rs=$('#f-reason').value;
+  return STATE.trades.filter(x => {
+    const d = (x.closed || '').slice(0,10);
+    return (!c || x.client===c) && (!rs || x.reason===rs) && (!fr || d>=fr) && (!to || d<=to);
+  });
+}
+function renderHistory(){
+  const rows = filteredHist();
+  const tb = $('#hist-table'); tb.innerHTML = '';
+  $('#hist-empty').classList.toggle('hidden', rows.length > 0);
+  rows.forEach(t => {
+    const tr = document.createElement('tr');
+    tr.innerHTML = `
+      <td>${t.closed||'—'}</td>
+      <td>${cname(t.client)}</td>
+      <td><b>${t.symbol||'—'}</b></td>
+      <td>${t.qty||0}</td>
+      <td>${fmt(+t.entry||0)}</td>
+      <td>${fmt(+t.exit||0)}</td>
+      <td class="${(+t.pnl||0)>=0?'pos':'neg'}">${fmt(+t.pnl||0)}</td>
+      <td class="${(+t.return_pct||0)>=0?'pos':'neg'}">${pct(+t.return_pct||0)}</td>
+      <td class="${(+t.R||0)>=0?'pos':'neg'}">${(+t.R||0).toFixed(2)}R</td>
+      <td><span class="chip">${t.reason||'—'}</span></td>`;
+    tb.appendChild(tr);
+  });
+}
+
+function renderReports(){
+  const trades = STATE.trades || [];
+  const total = trades.length;
+  const wins = trades.filter(t => (+t.pnl||0) > 0).length;
+  const pnlSum = trades.reduce((a,t) => a + (+t.pnl||0), 0);
+  const rVals = trades.map(t => +t.R).filter(r => !isNaN(r));
+  const avgR = rVals.length ? rVals.reduce((a,b)=>a+b,0)/rVals.length : null;
+  $('#rep-total').textContent = total;
+  $('#rep-total-sub').textContent = total === 1 ? 'trade' : 'trades';
+  $('#rep-winrate').textContent = total ? ((wins/total*100).toFixed(1) + '%') : '—';
+  $('#rep-winrate-sub').textContent = `${wins} / ${total}`;
+  $('#rep-pnl').textContent = fmt(pnlSum);
+  $('#rep-pnl').className = 'val ' + (pnlSum >= 0 ? 'pos' : 'neg');
+  $('#rep-avgR').textContent = avgR == null ? '—' : avgR.toFixed(2) + 'R';
+  $('#rep-avgR').className = 'val ' + (avgR == null ? '' : (avgR >= 0 ? 'pos' : 'neg'));
+
+  const sorted = [...trades].sort((a,b)=>(+b.pnl||0)-(+a.pnl||0));
+  const best = sorted.slice(0,5), worst = sorted.slice(-5).reverse();
+  const fill = (id, rows) => {
+    const tb = $(id); tb.innerHTML = '';
+    if (!rows.length) { tb.innerHTML = `<tr><td colspan="5" class="muted">No closed trades yet.</td></tr>`; return; }
+    rows.forEach(t => {
+      const pnl = +t.pnl || 0, R = +t.R || 0;
+      const tr = document.createElement('tr');
+      tr.innerHTML = `<td><b>${t.symbol||'—'}</b></td><td>${cname(t.client)}</td><td class="${pnl>=0?'pos':'neg'}">${fmt(pnl)}</td><td class="${R>=0?'pos':'neg'}">${R.toFixed(2)}R</td><td>${t.reason||'—'}</td>`;
+      tb.appendChild(tr);
+    });
+  };
+  fill('#rep-best', best); fill('#rep-worst', worst);
+
+  const byC = {};
+  trades.forEach(t => {
+    const k = t.client || '—';
+    (byC[k] = byC[k] || {n:0,w:0,pnl:0,rs:[]});
+    byC[k].n++; if ((+t.pnl||0) > 0) byC[k].w++;
+    byC[k].pnl += (+t.pnl||0);
+    if (!isNaN(+t.R)) byC[k].rs.push(+t.R);
+  });
+  const ctb = $('#rep-by-client'); ctb.innerHTML = '';
+  const cRows = Object.entries(byC).sort((a,b)=>b[1].pnl-a[1].pnl);
+  if (!cRows.length) ctb.innerHTML = `<tr><td colspan="6" class="muted">No data.</td></tr>`;
+  cRows.forEach(([cid,s]) => {
+    const ar = s.rs.length ? s.rs.reduce((a,b)=>a+b,0)/s.rs.length : null;
+    const tr = document.createElement('tr');
+    tr.innerHTML = `<td>${cname(cid)}</td><td>${s.n}</td><td>${s.w}</td><td>${(s.w/s.n*100).toFixed(1)}%</td><td class="${s.pnl>=0?'pos':'neg'}">${fmt(s.pnl)}</td><td class="${ar==null?'':(ar>=0?'pos':'neg')}">${ar==null?'—':ar.toFixed(2)+'R'}</td>`;
+    ctb.appendChild(tr);
+  });
+
+  const byR = {};
+  trades.forEach(t => {
+    const k = t.reason || '—';
+    (byR[k] = byR[k] || {n:0,pnl:0,rs:[]});
+    byR[k].n++; byR[k].pnl += (+t.pnl||0);
+    if (!isNaN(+t.R)) byR[k].rs.push(+t.R);
+  });
+  const rtb = $('#rep-by-reason'); rtb.innerHTML = '';
+  const rRows = Object.entries(byR).sort((a,b)=>b[1].n-a[1].n);
+  if (!rRows.length) rtb.innerHTML = `<tr><td colspan="4" class="muted">No data.</td></tr>`;
+  rRows.forEach(([reason,s]) => {
+    const ar = s.rs.length ? s.rs.reduce((a,b)=>a+b,0)/s.rs.length : null;
+    const tr = document.createElement('tr');
+    tr.innerHTML = `<td>${reason}</td><td>${s.n}</td><td class="${s.pnl>=0?'pos':'neg'}">${fmt(s.pnl)}</td><td class="${ar==null?'':(ar>=0?'pos':'neg')}">${ar==null?'—':ar.toFixed(2)+'R'}</td>`;
+    rtb.appendChild(tr);
+  });
+}
+
+function openEdit(id){
+  const p = STATE.positions.find(x=>x.id===id); if (!p) return;
+  STATE.editingPos = p;
+  const f = $('#form-edit'); f.reset(); $('#err-edit').textContent = '';
+  $('#edit-summary').textContent = `${p.symbol} · qty ${p.qty} · entry ${fmt(p.entry)}`;
+  f.querySelector('[name=sl]').value = p.sl || '';
+  f.querySelector('[name=target]').value = p.target || '';
+  f.querySelector('[name=cmp]').value = p.cmp || '';
+  f.querySelector('[name=status]').value = (p.status || 'open') === 'closed' ? 'open' : (p.status || 'open');
+  openModal('m-edit');
+}
+async function openClose(id){
+  const p = STATE.positions.find(x=>x.id===id); if (!p) return;
+  STATE.closingPos = p;
+  $('#close-summary').textContent = `${p.symbol} · qty ${p.qty} · entry ${fmt(p.entry)} · SL ${fmt(p.sl)}`;
+  $('#form-close').reset();
+  $('#form-close [name=closed]').value = today();
+  $('#err-close').textContent = '';
+  openModal('m-close');
+}
+async function autoDetectStale(){
+  const STALE_DAYS = 7, now = Date.now(), cutoff = STALE_DAYS*864e5;
+  let changed = false;
+  for (const p of STATE.positions) {
+    if ((p.status || 'open') !== 'open') continue;
+    const last = new Date(p.updated || p.created || p.opened || now).getTime();
+    if (now - last > cutoff) {
+      try { await pb.collection('positions').update(p.id, { status:'stale' }); p.status='stale'; changed = true; } catch(e){}
+    }
+  }
+  if (changed) renderDashboard();
+}
+
+function renderDashboard(){
+  const s = STATE.settings, pv = +s.portfolio_value || DEFAULTS.portfolio_value;
+  const open = STATE.positions.filter(p => (p.status || 'open') !== 'closed');
+  let risk = 0, pnl = 0;
+  open.forEach(p => { risk += Math.abs((p.qty||0) * ((p.entry||0) - (p.sl||0))); pnl += (p.qty||0) * ((p.cmp||0) - (p.entry||0)); });
+  const varPct = (risk / pv) * 100;
+  const stale = open.filter(p => p.status === 'stale').length;
+  $('#kpi-var').textContent = varPct.toFixed(2) + '%';
+  $('#kpi-var-sub').textContent = varPct <= (+s.var_limit || DEFAULTS.var_limit) ? 'within limit' : 'above limit';
+  $('#kpi-open').textContent = open.length;
+  $('#kpi-open-sub').textContent = `${open.length} tracked`;
+  $('#kpi-pnl').textContent = fmt(pnl);
+  $('#kpi-pnl').className = 'val ' + (pnl >= 0 ? 'pos' : 'neg');
+  $('#kpi-pnl-sub').textContent = 'unrealised';
+  $('#kpi-stale').textContent = stale;
+  $('#kpi-stale-sub').textContent = stale ? 'review needed' : 'none';
+  $('#var-bar').style.width = Math.min(100, varPct * 20) + '%';
+  $('#var-now').textContent = varPct.toFixed(2) + '%';
+  $('#var-limit').textContent = (+s.var_limit || DEFAULTS.var_limit).toFixed(2) + '%';
+  const top = STATE.clients.map(c => ({
+    name: c.name,
+    capital: +c.capital || 0,
+    open: open.filter(p => p.client === c.id).reduce((a,p)=>a+(+p.qty||0)*(+p.entry||0),0)
+  })).sort((a,b)=>b.open-a.open)[0];
+  $('#top-client').textContent = top ? `${top.name} · ${fmt(top.open)}` : '—';
+  renderPositions();
+}
+
+async function boot(){
+  try{
+    setStatus('loading...');
+    $('#page-title').textContent = 'Dashboard';
+    $('#page-sub').textContent = 'Live risk overview';
+    const [cl, po, tr] = await Promise.all([
+      pb.collection('clients').getFullList({sort:'-created'}),
+      pb.collection('positions').getFullList({sort:'-created'}),
+      pb.collection('trades').getFullList({sort:'-created'}),
+    ]);
+    STATE.clients = cl; STATE.positions = po; STATE.trades = tr;
+    try{
+      const s = await pb.collection('settings').getFirstListItem('');
+      STATE.settings = {...DEFAULTS, ...s};
+    }catch(e){ STATE.settings = {...DEFAULTS}; }
+    $('#who').textContent = `PB: ${PB_URL}`;
+    syncSettingsUI();
+    renderAll();
+    setStatus(`live · ${STATE.clients.length} clients · ${po.length} pos · ${tr.length} trades`, true);
+  }catch(e){
+    setStatus('load error: ' + (e.message || e), false);
+  }
+}
+function renderAll(){ renderDashboard(); renderClients(); renderHistory(); renderReports(); }
+
+function exportCSV(rows, filename){
+  const esc = v => `"${String(v ?? '').replaceAll('"','""')}"`;
+  const headers = rows.length ? Object.keys(rows[0]) : [];
+  const csv = [headers.join(',')].concat(rows.map(r=>headers.map(h=>esc(r[h])).join(','))).join('\n');
+  const a = document.createElement('a');
+  a.href = URL.createObjectURL(new Blob([csv],{type:'text/csv'}));
+  a.download = filename; a.click();
+}
+
+async function refreshCMP(){
+  setStatus('refreshing CMP...');
+  try{
+    const ids = STATE.positions.filter(p => (p.status||'open') !== 'closed').map(p => p.symbol).join(',');
+    const r = await fetch('https://your-cmp-api.example.com?symbols=' + encodeURIComponent(ids));
+    const data = await r.json();
+    STATE.positions.forEach(p => { if (data[p.symbol] != null) p.cmp = +data[p.symbol]; });
+    await Promise.all(STATE.positions.map(p => pb.collection('positions').update(p.id, { cmp: p.cmp } ).catch(()=>{})));
+    renderDashboard();
+    setStatus('CMP refreshed', true);
+  }catch(e){
+    setStatus('CMP refresh failed', false);
+  }
+}
+
+function loadFilters(){
+  const ids = ['f-client','f-reason','f-from','f-to'];
+  ids.forEach(id => { const el = $('#'+id); if (el) el.addEventListener('input', renderHistory); });
+  $('#btn-reset').onclick = () => { ['f-client','f-from','f-to','f-reason'].forEach(id => $('#'+id).value=''); renderHistory(); };
+  $('#btn-export-all').onclick = () => exportCSV(STATE.trades, 'history_all.csv');
+  $('#btn-export-filtered').onclick = () => exportCSV(filteredHist(), 'history_filtered.csv');
+}
+
+$$('nav button').forEach(b => b.onclick = () => {
+  $$('nav button').forEach(x => x.classList.remove('active')); b.classList.add('active');
+  ['dashboard','clients','history','reports','settings'].forEach(v => $('#'+v).classList.toggle('hidden', v !== b.dataset.view));
+  $('#page-title').textContent = b.textContent.trim();
+  $('#page-sub').textContent = b.dataset.view === 'dashboard' ? 'Live risk overview' :
+                               b.dataset.view === 'history' ? 'Closed trades' :
+                               b.dataset.view === 'reports' ? 'Performance analytics on closed trades' :
+                               b.dataset.view === 'clients' ? 'Client master data' : 'Singleton config';
+});
+$$('[data-close]').forEach(b => b.onclick = e => e.target.closest('.modal-back').classList.add('hidden'));
+$$('.modal-back').forEach(m => m.addEventListener('click', e => { if (e.target === m) m.classList.add('hidden'); }));
+
+$('#btn-new-client').onclick = () => openModal('m-client');
+$('#btn-new-position').onclick = () => { renderClients(); openModal('m-position'); };
+$('#btn-refresh-cmp').onclick = refreshCMP;
+$('#btn-logout').onclick = () => alert('Add logout if needed');
+$('#btn-save-pb-url').onclick = () => { localStorage.setItem('PB_URL', $('#pb-url').value.trim()); location.reload(); };
+$('#btn-clear-pb-url').onclick = () => { localStorage.removeItem('PB_URL'); $('#pb-url').value=''; };
+
+$('#form-client').addEventListener('submit', async e => {
+  e.preventDefault();
+  const fd = new FormData(e.target);
+  const d = Object.fromEntries(fd.entries());
+  if (!d.name) return;
+  try{
+    const rec = await pb.collection('clients').create(d);
+    STATE.clients.unshift(rec);
+    closeModal('m-client');
+    renderClients(); renderDashboard();
+  }catch(err){ $('#err-client').textContent = err.message || 'Create failed'; }
+});
+
+$('#form-position').addEventListener('submit', async e => {
+  e.preventDefault();
+  const fd = new FormData(e.target);
+  const d = Object.fromEntries(fd.entries());
+  d.qty = +d.qty || 0; d.entry = +d.entry || 0; d.cmp = +d.cmp || d.entry; d.sl = +d.sl || 0; d.target = +d.target || 0;
+  if (!d.opened) d.opened = today();
+  try{
+    const rec = await pb.collection('positions').create(d);
+    STATE.positions.unshift(rec);
+    closeModal('m-position');
+    renderDashboard();
+  }catch(err){ $('#err-position').textContent = err.message || 'Create failed'; }
+});
+
+$('#form-close').addEventListener('submit', async e => {
+  e.preventDefault();
+  const p = STATE.closingPos; if (!p) return;
+  const fd = new FormData(e.target);
+  const exit = +fd.get('exit') || 0;
+  const qty = +p.qty || 0;
+  const pnl = qty * (exit - (+p.entry || 0));
+  const return_pct = ((exit - (+p.entry || 0)) / (+p.entry || 1)) * 100;
+  const risk = Math.abs(qty * ((+p.entry || 0) - (+p.sl || 0))) || 1;
+  const R = pnl / risk;
+  const trade = {
+    client: p.client, symbol: p.symbol, qty: qty, entry: +p.entry || 0, exit,
+    pnl: +pnl.toFixed(2), return_pct: +return_pct.toFixed(2), R: +R.toFixed(2),
+    reason: fd.get('reason'), closed: fd.get('closed') || today(), notes: fd.get('notes') || '', status: 'closed'
+  };
+  try{
+    const rec = await pb.collection('trades').create(trade);
+    STATE.trades.unshift(rec);
+    await pb.collection('positions').update(p.id, { status: 'closed' }).catch(()=>{});
+    STATE.positions = STATE.positions.filter(x => x.id !== p.id);
+    closeModal('m-close');
+    STATE.closingPos = null;
+    renderAll();
+  }catch(err){ $('#err-close').textContent = err.message || 'Close failed'; }
+});
+
+$('#form-edit').addEventListener('submit', async e => {
+  e.preventDefault();
+  const p = STATE.editingPos; if (!p) return;
+  const fd = new FormData(e.target);
+  const patch = {
+    sl: parseFloat(fd.get('sl')) || null,
+    target: parseFloat(fd.get('target')) || null,
+    cmp: parseFloat(fd.get('cmp')) || null,
+    status: fd.get('status')
+  };
+  try{
+    const rec = await pb.collection('positions').update(p.id, patch);
+    Object.assign(p, rec);
+    closeModal('m-edit');
+    STATE.editingPos = null;
+    renderAll();
+  }catch(err){ $('#err-edit').textContent = err.message || 'Save failed'; }
+});
+
+window.addEventListener('DOMContentLoaded', boot);
+</script>
 </body>
 </html>
